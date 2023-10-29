@@ -1,4 +1,5 @@
 const std = @import("std");
+const Color = @import("vec3.zig").Color;
 
 pub fn main() !void {
     const image_width = 256;
@@ -17,15 +18,13 @@ pub fn main() !void {
             const fi: f32 = @floatFromInt(i);
             const fj: f32 = @floatFromInt(j);
 
-            const r = fi / (image_width - 1);
-            const g = fj / (image_height - 1);
-            const b = 0;
+            const color = Color.init(
+                fi / (image_width - 1),
+                fj / (image_height - 1),
+                0,
+            );
 
-            const ir: i32 = @intFromFloat(255.999 * r);
-            const ig: i32 = @intFromFloat(255.999 * g);
-            const ib: i32 = @intFromFloat(255.999 * b);
-
-            try stdout.print("{d} {d} {d}\n", .{ ir, ig, ib });
+            try color.write_color(stdout);
         }
 
         try bw.flush();
