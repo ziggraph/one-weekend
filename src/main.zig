@@ -5,7 +5,18 @@ const Color = vec3.Color;
 const Point3 = vec3.Point3;
 const Ray = @import("ray.zig").Ray;
 
+fn hit_sphere(center: *const Point3, radius: f32, r: *const Ray) bool {
+    const oc = r.o.sub(center.*);
+    const a = r.d.mag2();
+    const b = 2.0 * oc.dot(r.d);
+    const c = oc.mag2() - radius * radius;
+    const discriminant = b * b - 4 * a * c;
+    return discriminant >= 0;
+}
+
 fn ray_color(r: *const Ray) Color {
+    if (hit_sphere(&Point3.init(0, 0, -1), 0.5, r)) return Color.init(1, 0, 0);
+
     const unit_direction = r.d.unit();
     const a = 0.5 * (unit_direction.y + 1);
     return Color.init(1, 1, 1).mul(1 - a).add(Color.init(0.5, 0.7, 1.0).mul(a));
@@ -25,7 +36,7 @@ pub fn main() !void {
     const camera_center = Point3.zero();
 
     const viewport_u = Vec3{ .x = viewport_width };
-    const viewport_v = Vec3{ .y = -viewport_width };
+    const viewport_v = Vec3{ .y = -viewport_height };
 
     const pixel_delta_u = viewport_u.div(image_width);
     const pixel_delta_v = viewport_v.div(image_height);
