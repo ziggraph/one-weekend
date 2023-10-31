@@ -1,3 +1,5 @@
-# Ray Tracing in One Weekend in Zig
+# *Ray Tracing in One Weekend* in Zig
 
-[The book](https://raytracing.github.io/books/RayTracingInOneWeekend.html), version be 4.0.0-alpha.1
+To learn ray tracing and Zig in one go.
+
+[The book](https://raytracing.github.io/books/RayTracingInOneWeekend.html), version be *4.0.0-alpha.1*
