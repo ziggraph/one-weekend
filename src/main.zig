@@ -5,17 +5,26 @@ const Color = vec3.Color;
 const Point3 = vec3.Point3;
 const Ray = @import("ray.zig").Ray;
 
-fn hit_sphere(center: *const Point3, radius: f32, r: *const Ray) bool {
+fn hit_sphere(center: *const Point3, radius: f32, r: *const Ray) f32 {
     const oc = r.o.sub(center.*);
     const a = r.d.mag2();
     const b = 2.0 * oc.dot(r.d);
     const c = oc.mag2() - radius * radius;
     const discriminant = b * b - 4 * a * c;
-    return discriminant >= 0;
+
+    if (discriminant < 0) {
+        return -1.0;
+    } else {
+        return (-b - @sqrt(discriminant)) / (2.0 * a);
+    }
 }
 
 fn ray_color(r: *const Ray) Color {
-    if (hit_sphere(&Point3.init(0, 0, -1), 0.5, r)) return Color.init(1, 0, 0);
+    const t = hit_sphere(&Point3.init(0, 0, -1), 0.5, r);
+    if (t > 0.0) {
+        const N = r.at(t).sub(Vec3{ .z = -1 }).unit();
+        return Color.init(N.x + 1, N.y + 1, N.z + 1).mul(0.5);
+    }
 
     const unit_direction = r.d.unit();
     const a = 0.5 * (unit_direction.y + 1);
