@@ -35,9 +35,9 @@ pub const Vec3 = struct {
 
     pub fn mul(self: Vec3, k: f32) Vec3 {
         return Vec3{
-            k * self.x,
-            k * self.y,
-            k * self.z,
+            .x = k * self.x,
+            .y = k * self.y,
+            .z = k * self.z,
         };
     }
 
@@ -51,9 +51,9 @@ pub const Vec3 = struct {
 
     pub fn add(self: Vec3, other: Vec3) Vec3 {
         return Vec3{
-            self.x + other.x,
-            self.y + other.y,
-            self.z + other.z,
+            .x = self.x + other.x,
+            .y = self.y + other.y,
+            .z = self.z + other.z,
         };
     }
 
