@@ -8,14 +8,14 @@ const Ray = @import("ray.zig").Ray;
 fn hit_sphere(center: *const Point3, radius: f32, r: *const Ray) f32 {
     const oc = r.o.sub(center.*);
     const a = r.d.mag2();
-    const b = 2.0 * oc.dot(r.d);
+    const half_b = oc.dot(r.d);
     const c = oc.mag2() - radius * radius;
-    const discriminant = b * b - 4 * a * c;
+    const discriminant = half_b * half_b - a * c;
 
     if (discriminant < 0) {
         return -1.0;
     } else {
-        return (-b - @sqrt(discriminant)) / (2.0 * a);
+        return (-half_b - @sqrt(discriminant)) / a;
     }
 }
 
