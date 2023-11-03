@@ -27,7 +27,8 @@ const Sphere = struct {
 
         rec.t = root;
         rec.p = r.at(rec.t);
-        rec.normal = rec.p.sub(self.center).div(self.radius);
+        const outward_normal = rec.p.sub(self.center).div(self.radius);
+        rec.set_face_normal(r, outward_normal);
 
         return true;
     }
