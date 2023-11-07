@@ -4,7 +4,7 @@ const Point3 = vec3.Point3;
 const Ray = @import("ray.zig").Ray;
 const HitRecord = @import("hit.zig").HitRecord;
 
-const Sphere = struct {
+pub const Sphere = struct {
     center: Point3,
     radius: f32,
 
@@ -28,7 +28,7 @@ const Sphere = struct {
         rec.t = root;
         rec.p = r.at(rec.t);
         const outward_normal = rec.p.sub(self.center).div(self.radius);
-        rec.set_face_normal(r, outward_normal);
+        rec.setFaceNormal(r, outward_normal);
 
         return true;
     }
