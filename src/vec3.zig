@@ -1,15 +1,24 @@
+const float = @import("config.zig").float;
 const std = @import("std");
 
 pub const Vec3 = struct {
-    x: f32 = 0,
-    y: f32 = 0,
-    z: f32 = 0,
+    x: float = 0,
+    y: float = 0,
+    z: float = 0,
 
     pub fn zero() Vec3 {
         return Vec3{};
     }
 
-    pub fn init(x: f32, y: f32, z: f32) Vec3 {
+    pub fn one() Vec3 {
+        return Vec3{
+            .x = 1,
+            .y = 1,
+            .z = 1,
+        };
+    }
+
+    pub fn init(x: float, y: float, z: float) Vec3 {
         return Vec3{
             .x = x,
             .y = y,
@@ -21,19 +30,19 @@ pub const Vec3 = struct {
         return self.x == other.x and self.y == other.y and self.z == other.z;
     }
 
-    pub fn dot(self: Vec3, other: Vec3) f32 {
+    pub fn dot(self: Vec3, other: Vec3) float {
         return self.x * other.x + self.y * other.y + self.z * other.z;
     }
 
-    pub fn mag2(self: Vec3) f32 {
+    pub fn mag2(self: Vec3) float {
         return self.dot(self);
     }
 
-    pub fn mag(self: Vec3) f32 {
+    pub fn mag(self: Vec3) float {
         return @sqrt(self.mag2());
     }
 
-    pub fn mul(self: Vec3, k: f32) Vec3 {
+    pub fn mul(self: Vec3, k: float) Vec3 {
         return Vec3{
             .x = k * self.x,
             .y = k * self.y,
@@ -45,7 +54,7 @@ pub const Vec3 = struct {
         return self.mul(-1);
     }
 
-    pub fn div(self: Vec3, k: f32) Vec3 {
+    pub fn div(self: Vec3, k: float) Vec3 {
         return self.mul(1 / k);
     }
 
