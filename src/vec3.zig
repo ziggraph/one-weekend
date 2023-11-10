@@ -42,7 +42,7 @@ pub const Vec3 = struct {
         return @sqrt(self.mag2());
     }
 
-    pub fn mul(self: Vec3, k: float) Vec3 {
+    pub fn scale(self: Vec3, k: float) Vec3 {
         return Vec3{
             .x = k * self.x,
             .y = k * self.y,
@@ -51,11 +51,11 @@ pub const Vec3 = struct {
     }
 
     pub fn neg(self: Vec3) Vec3 {
-        return self.mul(-1);
+        return self.scale(-1);
     }
 
     pub fn div(self: Vec3, k: float) Vec3 {
-        return self.mul(1 / k);
+        return self.scale(1 / k);
     }
 
     pub fn add(self: Vec3, other: Vec3) Vec3 {

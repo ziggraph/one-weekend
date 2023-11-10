@@ -1,5 +1,5 @@
 const float = @import("config.zig").float;
-const inf = @import("std").math.inf(float);
+pub const inf = @import("std").math.inf(float);
 
 pub const Interval = struct {
     min: float = inf,

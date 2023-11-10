@@ -8,6 +8,6 @@ pub const Ray = struct {
     d: Vec3,
 
     pub fn at(self: Ray, t: float) Point3 {
-        return self.o.add(self.d.mul(t));
+        return self.o.add(self.d.scale(t));
     }
 };
