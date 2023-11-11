@@ -47,9 +47,9 @@ pub const Camera = struct {
                 var pixel_color = Color.zero();
                 for (0..self.samples_per_pixel) |_| {
                     const r = self.get_ray(i, j);
-                    pixel_color = pixel_color.add(ray_color(&r, &world));
+                    pixel_color = pixel_color.add(self.ray_color(&r, &world));
                 }
-                try pixel_color.write_color(stdout, self.samples_per_pixel);
+                try pixel_color.writeColor(stdout, self.samples_per_pixel);
             }
 
             try bw.flush();
@@ -97,11 +97,12 @@ pub const Camera = struct {
         return self._pixel_delta_u.scale(px).add(self._pixel_delta_v.scale(py));
     }
 
-    fn ray_color(r: *const Ray, world: *const HitLists) Color {
+    fn ray_color(self: *Camera, r: *const Ray, world: *const HitLists) Color {
         var rec = HitRecord{};
 
         if (world.hit(r, Interval.init(0, inf), &rec)) {
-            return rec.n.add(Color.one()).scale(0.5);
+            const direction = Vec3.randomOnHemisphere(&self._rnd, &rec.n);
+            return self.ray_color(&Ray.init(rec.p, direction), world).scale(0.5);
         }
 
         const unit_direction = r.d.unit();

@@ -1,6 +1,6 @@
 const float = @import("config.zig").float;
 const std = @import("std");
-
+const Xoshiro256 = std.rand.Xoshiro256;
 const Interval = @import("interval.zig").Interval;
 
 pub const Vec3 = struct {
@@ -13,11 +13,11 @@ pub const Vec3 = struct {
     }
 
     pub fn one() Vec3 {
-        return Vec3{
-            .x = 1,
-            .y = 1,
-            .z = 1,
-        };
+        return Vec3.all(1);
+    }
+
+    pub fn all(x: float) Vec3 {
+        return Vec3.init(x, x, x);
     }
 
     pub fn init(x: float, y: float, z: float) Vec3 {
@@ -84,7 +84,7 @@ pub const Vec3 = struct {
         };
     }
 
-    pub fn write_color(self: Vec3, w: anytype, sample_per_pixel: usize) !void {
+    pub fn writeColor(self: Vec3, w: anytype, sample_per_pixel: usize) !void {
         const weight = 1.0 / @as(float, @floatFromInt(sample_per_pixel));
         const weighted = self.scale(weight);
 
@@ -96,6 +96,32 @@ pub const Vec3 = struct {
             @as(i32, @intFromFloat(clamped.y * 256)),
             @as(i32, @intFromFloat(clamped.z * 256)),
         });
+    }
+
+    pub fn random(rnd: *Xoshiro256) Vec3 {
+        return Vec3.init(rnd.random().float(float), rnd.random().float(float), rnd.random().float(float));
+    }
+
+    pub fn randomIn(rnd: *Xoshiro256, min: float, max: float) Vec3 {
+        return random(rnd).sub(Vec3.all(0.5)).scale(max - min).add(Vec3.all((min + max) / 2));
+    }
+
+    pub fn randomInUnitSphere(rnd: *Xoshiro256) Vec3 {
+        while (true) {
+            const p = Vec3.randomIn(rnd, -1, 1);
+            if (p.mag2() < 1) return p;
+        }
+    }
+
+    pub fn randomUnitVec3(rnd: *Xoshiro256) Vec3 {
+        return randomInUnitSphere(rnd).unit();
+    }
+
+    pub fn randomOnHemisphere(rnd: *Xoshiro256, normal: *const Vec3) Vec3 {
+        const on_unit_sphere = randomUnitVec3(rnd);
+        if (on_unit_sphere.dot(normal.*) > 0.0) {
+            return on_unit_sphere;
+        } else return on_unit_sphere.neg();
     }
 };
 

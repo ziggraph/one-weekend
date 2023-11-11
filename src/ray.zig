@@ -7,6 +7,10 @@ pub const Ray = struct {
     o: Point3,
     d: Vec3,
 
+    pub fn init(o: Point3, d: Vec3) Ray {
+        return Ray{ .o = o, .d = d };
+    }
+
     pub fn at(self: Ray, t: float) Point3 {
         return self.o.add(self.d.scale(t));
     }
