@@ -107,7 +107,7 @@ pub const Camera = struct {
         var rec = HitRecord{};
 
         if (world.hit(r, Interval.init(0.001, inf), &rec)) {
-            const direction = Vec3.randomOnHemisphere(&self._rnd, &rec.n);
+            const direction = rec.n.add(Vec3.randomUnitVec3(&self._rnd));
             return self.rayColor(&Ray.init(rec.p, direction), depth - 1, world).scale(0.5);
         }
 
