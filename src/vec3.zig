@@ -84,9 +84,17 @@ pub const Vec3 = struct {
         };
     }
 
+    pub fn linear_to_gamma22(linear: float) float {
+        return std.math.pow(float, linear, 1.0 / 2.2);
+    }
+
     pub fn writeColor(self: Vec3, w: anytype, sample_per_pixel: usize) !void {
         const weight = 1.0 / @as(float, @floatFromInt(sample_per_pixel));
-        const weighted = self.scale(weight);
+        var weighted = self.scale(weight);
+
+        weighted.x = linear_to_gamma22(weighted.x);
+        weighted.y = linear_to_gamma22(weighted.y);
+        weighted.z = linear_to_gamma22(weighted.z);
 
         const intensity = Interval.init(0.000, 0.999);
         const clamped = Color.init(intensity.clamp(weighted.x), intensity.clamp(weighted.y), intensity.clamp(weighted.z));
