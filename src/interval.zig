@@ -1,5 +1,6 @@
-const float = @import("config.zig").float;
-pub const inf = @import("std").math.inf(float);
+const config = @import("config.zig");
+const float = config.float;
+const inf = config.inf;
 
 pub const Interval = struct {
     min: float = inf,
@@ -15,6 +16,12 @@ pub const Interval = struct {
 
     pub fn surrounds(self: Interval, x: float) bool {
         return self.min < x and x < self.max;
+    }
+
+    pub fn clamp(self: Interval, x: float) float {
+        if (x < self.min) return self.min;
+        if (x > self.max) return self.max;
+        return x;
     }
 };
 

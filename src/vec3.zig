@@ -1,6 +1,8 @@
 const float = @import("config.zig").float;
 const std = @import("std");
 
+const Interval = @import("interval.zig").Interval;
+
 pub const Vec3 = struct {
     x: float = 0,
     y: float = 0,
@@ -82,11 +84,17 @@ pub const Vec3 = struct {
         };
     }
 
-    pub fn write_color(self: Vec3, w: anytype) !void {
+    pub fn write_color(self: Vec3, w: anytype, sample_per_pixel: usize) !void {
+        const weight = 1.0 / @as(float, @floatFromInt(sample_per_pixel));
+        const weighted = self.scale(weight);
+
+        const intensity = Interval.init(0.000, 0.999);
+        const clamped = Color.init(intensity.clamp(weighted.x), intensity.clamp(weighted.y), intensity.clamp(weighted.z));
+
         try w.print("{d} {d} {d}\n", .{
-            @as(i32, @intFromFloat(self.x * 255.999)),
-            @as(i32, @intFromFloat(self.y * 255.999)),
-            @as(i32, @intFromFloat(self.z * 255.999)),
+            @as(i32, @intFromFloat(clamped.x * 256)),
+            @as(i32, @intFromFloat(clamped.y * 256)),
+            @as(i32, @intFromFloat(clamped.z * 256)),
         });
     }
 };

@@ -8,7 +8,6 @@ const HitRecord = hit.HitRecord;
 
 const interval = @import("interval.zig");
 const Interval = interval.Interval;
-const inf = interval.inf;
 
 const vec3 = @import("vec3.zig");
 const Color = vec3.Color;
@@ -17,13 +16,17 @@ const Point3 = vec3.Point3;
 
 const Sphere = @import("sphere.zig").Sphere;
 
-const float = @import("config.zig").float;
+const config = @import("config.zig");
+const float = config.float;
+const inf = config.inf;
 
 pub const Camera = struct {
-    // Image
     aspect_ratio: float = 16.0 / 9.0,
-    image_width: i32 = 400,
-    _image_height: i32 = undefined,
+    image_width: usize = 400,
+    samples_per_pixel: usize = 10,
+    seed: u64 = 0,
+    _rnd: std.rand.Xoshiro256 = undefined,
+    _image_height: usize = undefined,
     _pixel_delta_u: Vec3 = undefined,
     _pixel_delta_v: Vec3 = undefined,
     _pixel00_loc: Point3 = undefined,
@@ -37,19 +40,16 @@ pub const Camera = struct {
         const stdout = bw.writer();
 
         try stdout.print("P3\n{d} {d}\n255\n", .{ self.image_width, self._image_height });
-        for (0..@intCast(self._image_height)) |j| {
-            std.debug.print("\rScanlines remaining: {d} ", .{self._image_height - @as(i32, @intCast(j))});
+        for (0..self._image_height) |j| {
+            std.debug.print("\rScanlines remaining: {d} ", .{self._image_height - j});
 
-            for (0..@intCast(self.image_width)) |i| {
-                const fi: float = @floatFromInt(i);
-                const fj: float = @floatFromInt(j);
-
-                const pixel_center = self._pixel00_loc.add(self._pixel_delta_u.scale(fi)).add(self._pixel_delta_v.scale(fj));
-                const ray_direction = pixel_center.sub(self._camera_center);
-                const r = Ray{ .o = self._camera_center, .d = ray_direction };
-
-                const color = ray_color(&r, &world);
-                try color.write_color(stdout);
+            for (0..self.image_width) |i| {
+                var pixel_color = Color.zero();
+                for (0..self.samples_per_pixel) |_| {
+                    const r = self.get_ray(i, j);
+                    pixel_color = pixel_color.add(ray_color(&r, &world));
+                }
+                try pixel_color.write_color(stdout, self.samples_per_pixel);
             }
 
             try bw.flush();
@@ -76,6 +76,25 @@ pub const Camera = struct {
 
         const viewport_upper_left = camera_center.sub(Vec3{ .z = focal_length }).sub(viewport_u.div(2)).sub(viewport_v.div(2));
         self._pixel00_loc = viewport_upper_left.add(self._pixel_delta_u.add(self._pixel_delta_v).scale(0.5));
+
+        self._rnd = std.rand.DefaultPrng.init(self.seed);
+    }
+
+    fn get_ray(self: *Camera, i: usize, j: usize) Ray {
+        const fi: float = @floatFromInt(i);
+        const fj: float = @floatFromInt(j);
+
+        const pixel_center = self._pixel00_loc.add(self._pixel_delta_u.scale(fi)).add(self._pixel_delta_v.scale(fj));
+        const pixel_sample = pixel_center.add(self.pixel_sample_square());
+
+        const ray_direction = pixel_sample.sub(self._camera_center);
+        return Ray{ .o = self._camera_center, .d = ray_direction };
+    }
+
+    fn pixel_sample_square(self: *Camera) Vec3 {
+        const px = -0.5 + self._rnd.random().float(float);
+        const py = -0.5 + self._rnd.random().float(float);
+        return self._pixel_delta_u.scale(px).add(self._pixel_delta_v.scale(py));
     }
 
     fn ray_color(r: *const Ray, world: *const HitLists) Color {

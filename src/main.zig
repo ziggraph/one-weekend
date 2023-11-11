@@ -25,6 +25,6 @@ pub fn main() !void {
     try world.addSphere(Sphere{ .center = Point3{ .y = -100.5, .z = -1 }, .radius = 100 });
 
     // Camera
-    var camera = Camera{};
+    var camera = Camera{ .samples_per_pixel = 100 };
     try camera.render(world);
 }
