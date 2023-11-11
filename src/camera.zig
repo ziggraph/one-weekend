@@ -24,7 +24,9 @@ pub const Camera = struct {
     aspect_ratio: float = 16.0 / 9.0,
     image_width: usize = 400,
     samples_per_pixel: usize = 10,
+    max_depth: usize = 10,
     seed: u64 = 0,
+
     _rnd: std.rand.Xoshiro256 = undefined,
     _image_height: usize = undefined,
     _pixel_delta_u: Vec3 = undefined,
@@ -46,8 +48,8 @@ pub const Camera = struct {
             for (0..self.image_width) |i| {
                 var pixel_color = Color.zero();
                 for (0..self.samples_per_pixel) |_| {
-                    const r = self.get_ray(i, j);
-                    pixel_color = pixel_color.add(self.ray_color(&r, &world));
+                    const r = self.getRay(i, j);
+                    pixel_color = pixel_color.add(self.rayColor(&r, self.max_depth, &world));
                 }
                 try pixel_color.writeColor(stdout, self.samples_per_pixel);
             }
@@ -80,29 +82,33 @@ pub const Camera = struct {
         self._rnd = std.rand.DefaultPrng.init(self.seed);
     }
 
-    fn get_ray(self: *Camera, i: usize, j: usize) Ray {
+    fn getRay(self: *Camera, i: usize, j: usize) Ray {
         const fi: float = @floatFromInt(i);
         const fj: float = @floatFromInt(j);
 
         const pixel_center = self._pixel00_loc.add(self._pixel_delta_u.scale(fi)).add(self._pixel_delta_v.scale(fj));
-        const pixel_sample = pixel_center.add(self.pixel_sample_square());
+        const pixel_sample = pixel_center.add(self.pixelSampleSquare());
 
         const ray_direction = pixel_sample.sub(self._camera_center);
         return Ray{ .o = self._camera_center, .d = ray_direction };
     }
 
-    fn pixel_sample_square(self: *Camera) Vec3 {
+    fn pixelSampleSquare(self: *Camera) Vec3 {
         const px = -0.5 + self._rnd.random().float(float);
         const py = -0.5 + self._rnd.random().float(float);
         return self._pixel_delta_u.scale(px).add(self._pixel_delta_v.scale(py));
     }
 
-    fn ray_color(self: *Camera, r: *const Ray, world: *const HitLists) Color {
+    fn rayColor(self: *Camera, r: *const Ray, depth: usize, world: *const HitLists) Color {
+        if (depth <= 0) {
+            return Color.zero();
+        }
+
         var rec = HitRecord{};
 
         if (world.hit(r, Interval.init(0, inf), &rec)) {
             const direction = Vec3.randomOnHemisphere(&self._rnd, &rec.n);
-            return self.ray_color(&Ray.init(rec.p, direction), world).scale(0.5);
+            return self.rayColor(&Ray.init(rec.p, direction), depth - 1, world).scale(0.5);
         }
 
         const unit_direction = r.d.unit();
