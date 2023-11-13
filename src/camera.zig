@@ -20,6 +20,10 @@ const config = @import("config.zig");
 const float = config.float;
 const inf = config.inf;
 
+const material = @import("material.zig");
+const Material = material.Material;
+const Lambertian = material.Lambertian;
+
 pub const Camera = struct {
     aspect_ratio: float = 16.0 / 9.0,
     image_width: usize = 400,
@@ -70,13 +74,13 @@ pub const Camera = struct {
         const viewport_width = viewport_height * actual_aspect_ratio;
         const camera_center = Point3.zero();
 
-        const viewport_u = Vec3{ .x = viewport_width };
-        const viewport_v = Vec3{ .y = -viewport_height };
+        const viewport_u = Vec3.init(viewport_width, 0, 0);
+        const viewport_v = Vec3.init(0, -viewport_height, 0);
 
         self._pixel_delta_u = viewport_u.div(@floatFromInt(self.image_width));
         self._pixel_delta_v = viewport_v.div(@floatFromInt(self._image_height));
 
-        const viewport_upper_left = camera_center.sub(Vec3{ .z = focal_length }).sub(viewport_u.div(2)).sub(viewport_v.div(2));
+        const viewport_upper_left = camera_center.sub(Vec3.init(0, 0, focal_length)).sub(viewport_u.div(2)).sub(viewport_v.div(2));
         self._pixel00_loc = viewport_upper_left.add(self._pixel_delta_u.add(self._pixel_delta_v).scale(0.5));
 
         self._rnd = std.rand.DefaultPrng.init(self.seed);
@@ -107,8 +111,12 @@ pub const Camera = struct {
         var rec = HitRecord{};
 
         if (world.hit(r, Interval.init(0.001, inf), &rec)) {
-            const direction = rec.n.add(Vec3.randomUnitVec3(&self._rnd));
-            return self.rayColor(&Ray.init(rec.p, direction), depth - 1, world).scale(0.5);
+            var scattered = Ray{};
+            var attenuation = Color{};
+            if (rec.mat.scatter(&self._rnd, r, &rec, &attenuation, &scattered)) {
+                return attenuation.mul(self.rayColor(&scattered, depth - 1, world));
+            }
+            return Color.zero();
         }
 
         const unit_direction = r.d.unit();

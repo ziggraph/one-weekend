@@ -12,6 +12,10 @@ const math = std.math;
 const Sphere = @import("sphere.zig").Sphere;
 const Interval = @import("interval.zig").Interval;
 const Camera = @import("camera.zig").Camera;
+const material = @import("material.zig");
+const Material = material.Material;
+const Lambertian = material.Lambertian;
+const Metal = material.Metal;
 
 pub fn main() !void {
     // Allocator
@@ -21,8 +25,16 @@ pub fn main() !void {
 
     // World
     var world = HitLists.init(allocator);
-    try world.addSphere(Sphere{ .center = Point3{ .z = -1 }, .radius = 0.5 });
-    try world.addSphere(Sphere{ .center = Point3{ .y = -100.5, .z = -1 }, .radius = 100 });
+
+    const mat_ground = Material{ .lambertian = Lambertian{ .albedo = Color.init(0.8, 0.8, 0.0) } };
+    const mat_center = Material{ .lambertian = Lambertian{ .albedo = Color.init(0.7, 0.3, 0.3) } };
+    const mat_left = Material{ .metal = Metal{ .albedo = Color.all(0.8) } };
+    const mat_right = Material{ .metal = Metal{ .albedo = Color.init(0.8, 0.6, 0.2) } };
+
+    try world.addSphere(Sphere.init(Point3.init(0.0, -100.5, -1.0), 100.0, mat_ground));
+    try world.addSphere(Sphere.init(Point3.init(0.0, 0.0, -1.0), 0.5, mat_center));
+    try world.addSphere(Sphere.init(Point3.init(-1.0, 0.0, -1.0), 0.5, mat_left));
+    try world.addSphere(Sphere.init(Point3.init(1.0, 0.0, -1.0), 0.5, mat_right));
 
     // Camera
     var camera = Camera{ .samples_per_pixel = 100, .max_depth = 50 };

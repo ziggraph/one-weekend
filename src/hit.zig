@@ -8,12 +8,14 @@ const std = @import("std");
 const ArrayList = std.ArrayList;
 const Allocator = std.mem.Allocator;
 const Interval = @import("interval.zig").Interval;
+const Material = @import("material.zig").Material;
 
 pub const HitRecord = struct {
     p: Point3 = undefined,
     n: Vec3 = undefined,
     t: float = undefined,
     front_face: bool = undefined,
+    mat: Material = undefined,
 
     pub fn setFaceNormal(self: *HitRecord, r: *const Ray, outward_normal: *const Vec3) void {
         self.front_face = r.d.dot(outward_normal.*) < 0;

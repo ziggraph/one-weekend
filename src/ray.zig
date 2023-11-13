@@ -4,8 +4,8 @@ const Vec3 = vec3.Vec3;
 const Point3 = vec3.Point3;
 
 pub const Ray = struct {
-    o: Point3,
-    d: Vec3,
+    o: Point3 = undefined,
+    d: Vec3 = undefined,
 
     pub fn init(o: Point3, d: Vec3) Ray {
         return Ray{ .o = o, .d = d };

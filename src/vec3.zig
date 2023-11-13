@@ -4,12 +4,12 @@ const Xoshiro256 = std.rand.Xoshiro256;
 const Interval = @import("interval.zig").Interval;
 
 pub const Vec3 = struct {
-    x: float = 0,
-    y: float = 0,
-    z: float = 0,
+    x: float = undefined,
+    y: float = undefined,
+    z: float = undefined,
 
     pub fn zero() Vec3 {
-        return Vec3{};
+        return Vec3.all(0);
     }
 
     pub fn one() Vec3 {
@@ -44,11 +44,24 @@ pub const Vec3 = struct {
         return @sqrt(self.mag2());
     }
 
+    pub fn near_zero(self: Vec3) bool {
+        const s = 1e-8;
+        return @fabs(self.x) < s and @fabs(self.y) < s and @fabs(self.z) < s;
+    }
+
     pub fn scale(self: Vec3, k: float) Vec3 {
         return Vec3{
             .x = k * self.x,
             .y = k * self.y,
             .z = k * self.z,
+        };
+    }
+
+    pub fn mul(self: Vec3, other: Vec3) Vec3 {
+        return Vec3{
+            .x = self.x * other.x,
+            .y = self.y * other.y,
+            .z = self.z * other.z,
         };
     }
 
@@ -130,6 +143,10 @@ pub const Vec3 = struct {
         if (on_unit_sphere.dot(normal.*) > 0.0) {
             return on_unit_sphere;
         } else return on_unit_sphere.neg();
+    }
+
+    pub fn reflect(v: *const Vec3, n: *const Vec3) Vec3 {
+        return v.sub(n.scale(2 * v.dot(n.*)));
     }
 };
 
