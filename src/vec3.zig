@@ -148,6 +148,13 @@ pub const Vec3 = struct {
     pub fn reflect(v: *const Vec3, n: *const Vec3) Vec3 {
         return v.sub(n.scale(2 * v.dot(n.*)));
     }
+
+    pub fn refract(uv: *const Vec3, n: *const Vec3, etai_over_etat: float) Vec3 {
+        const cos_theta = @min(-uv.dot(n.*), 1.0);
+        const r_out_perp = uv.add(n.scale(cos_theta)).scale(etai_over_etat);
+        const r_out_parallel = n.scale(-@sqrt(@fabs(1.0 - r_out_perp.mag2())));
+        return r_out_perp.add(r_out_parallel);
+    }
 };
 
 pub const Point3 = Vec3;

@@ -16,6 +16,7 @@ const material = @import("material.zig");
 const Material = material.Material;
 const Lambertian = material.Lambertian;
 const Metal = material.Metal;
+const Dielectric = material.Dielectric;
 
 pub fn main() !void {
     // Allocator
@@ -27,13 +28,14 @@ pub fn main() !void {
     var world = HitLists.init(allocator);
 
     const mat_ground = Material{ .lambertian = Lambertian{ .albedo = Color.init(0.8, 0.8, 0.0) } };
-    const mat_center = Material{ .lambertian = Lambertian{ .albedo = Color.init(0.7, 0.3, 0.3) } };
-    const mat_left = Material{ .metal = Metal{ .albedo = Color.all(0.8) } };
-    const mat_right = Material{ .metal = Metal{ .albedo = Color.init(0.8, 0.6, 0.2) } };
+    const mat_center = Material{ .lambertian = Lambertian{ .albedo = Color.init(0.1, 0.2, 0.5) } };
+    const mat_left = Material{ .dielectric = Dielectric{ .ir = 1.5 } };
+    const mat_right = Material{ .metal = Metal{ .albedo = Color.init(0.8, 0.6, 0.2), .fuzz = 0.0 } };
 
     try world.addSphere(Sphere.init(Point3.init(0.0, -100.5, -1.0), 100.0, mat_ground));
     try world.addSphere(Sphere.init(Point3.init(0.0, 0.0, -1.0), 0.5, mat_center));
     try world.addSphere(Sphere.init(Point3.init(-1.0, 0.0, -1.0), 0.5, mat_left));
+    try world.addSphere(Sphere.init(Point3.init(-1.0, 0.0, -1.0), -0.4, mat_left));
     try world.addSphere(Sphere.init(Point3.init(1.0, 0.0, -1.0), 0.5, mat_right));
 
     // Camera
