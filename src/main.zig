@@ -27,19 +27,52 @@ pub fn main() !void {
     // World
     var world = HitLists.init(allocator);
 
-    const mat_ground = Material{ .lambertian = Lambertian{ .albedo = Color.init(0.8, 0.8, 0.0) } };
-    const mat_center = Material{ .lambertian = Lambertian{ .albedo = Color.init(0.1, 0.2, 0.5) } };
-    const mat_left = Material{ .dielectric = Dielectric{ .ir = 1.5 } };
-    const mat_right = Material{ .metal = Metal{ .albedo = Color.init(0.8, 0.6, 0.2), .fuzz = 0.0 } };
+    const mat_ground = Material{ .lambertian = Lambertian{ .albedo = Color.init(0.5, 0.5, 0.5) } };
+    try world.addSphere(Sphere.init(Point3.init(0.0, -1000, 0), 1000, mat_ground));
 
-    try world.addSphere(Sphere.init(Point3.init(0.0, -100.5, -1.0), 100.0, mat_ground));
-    try world.addSphere(Sphere.init(Point3.init(0.0, 0.0, -1.0), 0.5, mat_center));
-    try world.addSphere(Sphere.init(Point3.init(-1.0, 0.0, -1.0), 0.5, mat_left));
-    try world.addSphere(Sphere.init(Point3.init(-1.0, 0.0, -1.0), -0.4, mat_left));
-    try world.addSphere(Sphere.init(Point3.init(1.0, 0.0, -1.0), 0.5, mat_right));
+    const seed = 0;
+    var rng = std.rand.DefaultPrng.init(seed);
+
+    var a: float = -11;
+    while (a < 11) : (a += 1) {
+        var b: float = -11;
+        while (b < 11) : (b += 1) {
+            const choose_mat = r(&rng);
+            const center = Point3.init(a + 0.9 * r(&rng), 0.2, b + 0.9 * r(&rng));
+
+            if (center.sub(Point3.init(4, 0.2, 0)).mag() > 0.9) {
+                if (choose_mat < 0.8) {
+                    const albedo = Color.random(&rng).mul(Color.random(&rng));
+                    const mat = Material{ .lambertian = Lambertian{ .albedo = albedo } };
+                    try world.addSphere(Sphere.init(center, 0.2, mat));
+                } else if (choose_mat < 0.95) {
+                    const albedo = Color.random(&rng).div(2).add(Color.all(0.5));
+                    const fuzz = r(&rng) / 2;
+                    const mat = Material{ .metal = Metal{ .albedo = albedo, .fuzz = fuzz } };
+                    try world.addSphere(Sphere.init(center, 0.2, mat));
+                } else {
+                    const mat = Material{ .dielectric = Dielectric{ .ir = 1.5 } };
+                    try world.addSphere(Sphere.init(center, 0.2, mat));
+                }
+            }
+        }
+    }
+
+    const mat_1 = Material{ .dielectric = Dielectric{ .ir = 1.5 } };
+    try world.addSphere(Sphere.init(Point3.init(0, 1, 0), 1.0, mat_1));
+
+    const mat_2 = Material{ .lambertian = Lambertian{ .albedo = Color.init(0.4, 0.2, 0.1) } };
+    try world.addSphere(Sphere.init(Point3.init(-4, 1, 0), 1.0, mat_2));
+
+    const mat_3 = Material{ .metal = Metal{ .albedo = Color.init(0.7, 0.6, 0.5), .fuzz = 0.0 } };
+    try world.addSphere(Sphere.init(Point3.init(4, 1, 0), 1.0, mat_3));
 
     // Camera
-    var camera = Camera{ .samples_per_pixel = 100, .max_depth = 50, .lookfrom = Point3.init(-2, 2, 1), .lookat = Point3.init(0, 0, -1), .vup = Vec3.init(0, 1, 0), .vfov = 20, .defocus_angle = 10.0, .focus_dist = 3.4 };
+    var camera = Camera{ .image_width = 1200, .samples_per_pixel = 10, .max_depth = 50, .lookfrom = Point3.init(13, 2, 3), .lookat = Point3.init(0, 0, 0), .vup = Vec3.init(0, 1, 0), .vfov = 20, .defocus_angle = 0.6, .focus_dist = 10.0 };
 
     try camera.render(world);
+}
+
+fn r(rng: *std.rand.Xoshiro256) float {
+    return rng.random().float(float);
 }

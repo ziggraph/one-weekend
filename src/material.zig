@@ -29,7 +29,7 @@ pub const Material = union(MaterialTag) {
             },
 
             .metal => |m| {
-                const reflected = Vec3.reflect(&r_in.d.unit(), &rec.n);
+                const reflected = Vec3.reflect(r_in.d.unit(), rec.n);
                 scattered.* = Ray.init(rec.p, reflected.add(Vec3.randomUnitVec3(rnd).scale(m.fuzz)));
                 attenuation.* = m.albedo;
                 return scattered.d.dot(rec.n) > 0;
@@ -42,7 +42,7 @@ pub const Material = union(MaterialTag) {
                 const cos_theta = @min(-unit_direction.dot(rec.n), 1.0);
                 const sin_theta = @sqrt(1.0 - cos_theta * cos_theta);
                 const cannot_refract = refraction_ratio * sin_theta > 1.0;
-                const direction = if (cannot_refract or reflectance(cos_theta, refraction_ratio) > rnd.random().float(float)) Vec3.reflect(&unit_direction, &rec.n) else Vec3.refract(&unit_direction, &rec.n, refraction_ratio);
+                const direction = if (cannot_refract or reflectance(cos_theta, refraction_ratio) > rnd.random().float(float)) Vec3.reflect(unit_direction, rec.n) else Vec3.refract(unit_direction, rec.n, refraction_ratio);
                 scattered.* = Ray.init(rec.p, direction);
                 return true;
             },
