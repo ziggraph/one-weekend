@@ -36,6 +36,9 @@ pub const Camera = struct {
     lookat: Point3 = Point3.init(0, 0, 0),
     vup: Vec3 = Vec3.init(0, 1, 0),
 
+    defocus_angle: float = 0,
+    focus_dist: float = 10,
+
     _rnd: std.rand.Xoshiro256 = undefined,
     _image_height: usize = undefined,
     _pixel_delta_u: Vec3 = undefined,
@@ -45,6 +48,8 @@ pub const Camera = struct {
     _u: Vec3 = undefined,
     _v: Vec3 = undefined,
     _w: Vec3 = undefined,
+    _defocus_disk_u: Vec3 = undefined,
+    _defocus_disk_v: Vec3 = undefined,
 
     pub fn render(self: *Camera, world: HitLists) !void {
         try self.init();
@@ -77,10 +82,9 @@ pub const Camera = struct {
         self._center = self.lookfrom;
         const actual_aspect_ratio = @as(float, @floatFromInt(self.image_width)) / @as(float, @floatFromInt(self._image_height));
 
-        const focal_length = self.lookfrom.sub(self.lookat).mag();
         const theta = std.math.degreesToRadians(float, self.vfov);
         const h = @tan(theta / 2);
-        const viewport_height = 2 * h * focal_length;
+        const viewport_height = 2 * h * self.focus_dist;
         const viewport_width = viewport_height * actual_aspect_ratio;
 
         self._w = self.lookfrom.sub(self.lookat).unit();
@@ -93,9 +97,12 @@ pub const Camera = struct {
         self._pixel_delta_u = viewport_u.div(@floatFromInt(self.image_width));
         self._pixel_delta_v = viewport_v.div(@floatFromInt(self._image_height));
 
-        const viewport_upper_left = self._center.sub(self._w.scale(focal_length)).sub(viewport_u.div(2)).sub(viewport_v.div(2));
+        const viewport_upper_left = self._center.sub(self._w.scale(self.focus_dist)).sub(viewport_u.div(2)).sub(viewport_v.div(2));
         self._pixel00_loc = viewport_upper_left.add(self._pixel_delta_u.add(self._pixel_delta_v).scale(0.5));
 
+        const defocus_radius = self.focus_dist * @tan(std.math.degreesToRadians(float, self.defocus_angle / 2));
+        self._defocus_disk_u = self._u.scale(defocus_radius);
+        self._defocus_disk_v = self._v.scale(defocus_radius);
         self._rnd = std.rand.DefaultPrng.init(self.seed);
     }
 
@@ -106,14 +113,20 @@ pub const Camera = struct {
         const pixel_center = self._pixel00_loc.add(self._pixel_delta_u.scale(fi)).add(self._pixel_delta_v.scale(fj));
         const pixel_sample = pixel_center.add(self.pixelSampleSquare());
 
-        const ray_direction = pixel_sample.sub(self._center);
-        return Ray{ .o = self._center, .d = ray_direction };
+        const ray_origin = if (self.defocus_angle <= 0) self._center else self.defocus_disk_sample();
+        const ray_direction = pixel_sample.sub(ray_origin);
+        return Ray{ .o = ray_origin, .d = ray_direction };
     }
 
     fn pixelSampleSquare(self: *Camera) Vec3 {
         const px = -0.5 + self._rnd.random().float(float);
         const py = -0.5 + self._rnd.random().float(float);
         return self._pixel_delta_u.scale(px).add(self._pixel_delta_v.scale(py));
+    }
+
+    fn defocus_disk_sample(self: *Camera) Point3 {
+        const p = Vec3.randomInUnitDisk(&self._rnd);
+        return self._center.add(self._defocus_disk_u.scale(p.x)).add(self._defocus_disk_v.scale(p.y));
     }
 
     fn rayColor(self: *Camera, r: *const Ray, depth: usize, world: *const HitLists) Color {

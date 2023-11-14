@@ -127,6 +127,13 @@ pub const Vec3 = struct {
         return random(rnd).sub(Vec3.all(0.5)).scale(max - min).add(Vec3.all((min + max) / 2));
     }
 
+    pub fn randomInUnitDisk(rnd: *Xoshiro256) Vec3 {
+        while (true) {
+            const p = Vec3.init(rnd.random().float(float) * 2 - 1, rnd.random().float(float) * 2 - 1, 0);
+            if (p.mag2() < 1) return p;
+        }
+    }
+
     pub fn randomInUnitSphere(rnd: *Xoshiro256) Vec3 {
         while (true) {
             const p = Vec3.randomIn(rnd, -1, 1);
