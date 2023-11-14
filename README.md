@@ -1,5 +1,7 @@
 # *Ray Tracing in One Weekend* in Zig
 
+![image.jpg](image.jpg)
+
 To learn ray tracing and Zig in one go.
 
 [The book](https://raytracing.github.io/books/RayTracingInOneWeekend.html), version be *4.0.0-alpha.1*
