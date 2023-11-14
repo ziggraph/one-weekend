@@ -39,6 +39,7 @@ pub fn main() !void {
     try world.addSphere(Sphere.init(Point3.init(1.0, 0.0, -1.0), 0.5, mat_right));
 
     // Camera
-    var camera = Camera{ .samples_per_pixel = 100, .max_depth = 50 };
+    var camera = Camera{ .samples_per_pixel = 100, .max_depth = 50, .lookfrom = Point3.init(-2, 2, 1), .lookat = Point3.init(0, 0, -1), .vup = Vec3.init(0, 1, 0), .vfov = 20 };
+
     try camera.render(world);
 }

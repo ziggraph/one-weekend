@@ -31,12 +31,20 @@ pub const Camera = struct {
     max_depth: usize = 10,
     seed: u64 = 0,
 
+    vfov: float = 90,
+    lookfrom: Point3 = Point3.init(0, 0, -1),
+    lookat: Point3 = Point3.init(0, 0, 0),
+    vup: Vec3 = Vec3.init(0, 1, 0),
+
     _rnd: std.rand.Xoshiro256 = undefined,
     _image_height: usize = undefined,
     _pixel_delta_u: Vec3 = undefined,
     _pixel_delta_v: Vec3 = undefined,
     _pixel00_loc: Point3 = undefined,
-    _camera_center: Point3 = undefined,
+    _center: Point3 = undefined,
+    _u: Vec3 = undefined,
+    _v: Vec3 = undefined,
+    _w: Vec3 = undefined,
 
     pub fn render(self: *Camera, world: HitLists) !void {
         try self.init();
@@ -66,21 +74,26 @@ pub const Camera = struct {
 
     fn init(self: *Camera) !void {
         self._image_height = @intFromFloat(@max(1.0, @as(float, @floatFromInt(self.image_width)) / self.aspect_ratio));
-        self._camera_center = Point3.zero();
+        self._center = self.lookfrom;
         const actual_aspect_ratio = @as(float, @floatFromInt(self.image_width)) / @as(float, @floatFromInt(self._image_height));
 
-        const focal_length = 1.0;
-        const viewport_height = 2.0;
+        const focal_length = self.lookfrom.sub(self.lookat).mag();
+        const theta = std.math.degreesToRadians(float, self.vfov);
+        const h = @tan(theta / 2);
+        const viewport_height = 2 * h * focal_length;
         const viewport_width = viewport_height * actual_aspect_ratio;
-        const camera_center = Point3.zero();
 
-        const viewport_u = Vec3.init(viewport_width, 0, 0);
-        const viewport_v = Vec3.init(0, -viewport_height, 0);
+        self._w = self.lookfrom.sub(self.lookat).unit();
+        self._u = self.vup.cross(self._w).unit();
+        self._v = self._w.cross(self._u);
+
+        const viewport_u = self._u.scale(viewport_width);
+        const viewport_v = self._v.scale(-viewport_height);
 
         self._pixel_delta_u = viewport_u.div(@floatFromInt(self.image_width));
         self._pixel_delta_v = viewport_v.div(@floatFromInt(self._image_height));
 
-        const viewport_upper_left = camera_center.sub(Vec3.init(0, 0, focal_length)).sub(viewport_u.div(2)).sub(viewport_v.div(2));
+        const viewport_upper_left = self._center.sub(self._w.scale(focal_length)).sub(viewport_u.div(2)).sub(viewport_v.div(2));
         self._pixel00_loc = viewport_upper_left.add(self._pixel_delta_u.add(self._pixel_delta_v).scale(0.5));
 
         self._rnd = std.rand.DefaultPrng.init(self.seed);
@@ -93,8 +106,8 @@ pub const Camera = struct {
         const pixel_center = self._pixel00_loc.add(self._pixel_delta_u.scale(fi)).add(self._pixel_delta_v.scale(fj));
         const pixel_sample = pixel_center.add(self.pixelSampleSquare());
 
-        const ray_direction = pixel_sample.sub(self._camera_center);
-        return Ray{ .o = self._camera_center, .d = ray_direction };
+        const ray_direction = pixel_sample.sub(self._center);
+        return Ray{ .o = self._center, .d = ray_direction };
     }
 
     fn pixelSampleSquare(self: *Camera) Vec3 {

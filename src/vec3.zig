@@ -91,9 +91,9 @@ pub const Vec3 = struct {
 
     pub fn cross(self: Vec3, other: Vec3) Vec3 {
         return Vec3{
-            self.y * other.z - self.z * other.y,
-            self.z * other.x - self.x * other.z,
-            self.x * other.y - self.y * other.x,
+            .x = self.y * other.z - self.z * other.y,
+            .y = self.z * other.x - self.x * other.z,
+            .z = self.x * other.y - self.y * other.x,
         };
     }
 
